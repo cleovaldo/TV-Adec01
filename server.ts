@@ -14,10 +14,21 @@ async function startServer() {
 
   // Global state for screens (simulating a DB)
   let screenPlaylists: Record<string, any> = {};
+  let newsData: any[] = [];
 
   // API Routes
   app.get("/health", (req, res) => {
     res.json({ status: "ok", mode: process.env.NODE_ENV });
+  });
+
+  app.get("/api/news", (req, res) => {
+    res.json(newsData);
+  });
+
+  app.post("/api/news", (req, res) => {
+    const { news } = req.body;
+    newsData = news;
+    res.json({ success: true, timestamp: Date.now() });
   });
 
   app.get("/api/screens/:id/content", (req, res) => {

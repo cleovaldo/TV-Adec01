@@ -51,16 +51,61 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
     }, 800);
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsPublishing(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      if (activeSubTab === 'announcements') {
+        // For announcements, we update the playlist for all screens
+        // In a real app, we might select specific screens, but here we update all defaults
+        const response = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            screenIds: ['s1', 's2', 's3'], 
+            playlist: [
+              {
+                id: Date.now().toString(),
+                type: 'image',
+                title: title,
+                content: content,
+                url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800',
+                duration: 15
+              }
+            ]
+          })
+        });
+        if (!response.ok) throw new Error('Failed to publish announcement');
+      } else {
+        // For news, we update the news feed
+        const response = await fetch('/api/news', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            news: [
+              {
+                id: Date.now().toString(),
+                title: title,
+                content: content,
+                date: new Date().toISOString()
+              }
+            ]
+          })
+        });
+        if (!response.ok) throw new Error('Failed to publish news');
+      }
+
       localStorage.setItem('announcement_draft', JSON.stringify({ title, content }));
-      setIsPublishing(false);
       toast.success('Publicado com sucesso!', {
-        description: 'O anúncio agora está visível nas TVs.',
+        description: activeSubTab === 'announcements' 
+          ? 'O anúncio agora está visível nas TVs.'
+          : 'O feed de notícias foi atualizado.',
       });
-    }, 1200);
+    } catch (error) {
+      console.error('Publish Error:', error);
+      toast.error('Erro ao publicar conteúdo.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleCreateNew = () => {
