@@ -129,25 +129,33 @@ export const TV_SCREENS: TVScreen[] = [
 export const USERS = [
   {
     id: 'u1',
-    email: 'admin@grace.tv',
+    email: 'admin@adec.br',
     password: 'admin',
     role: 'admin',
-    name: 'Usuário Admin',
+    name: 'Cleovaldo Admin',
   },
   {
     id: 'u2',
-    email: 'screen1@grace.tv',
-    password: 'tv1',
+    email: 'tela1@adec.br',
+    password: 'tela',
     role: 'screen',
-    name: 'Sanctuary Screen',
+    name: 'Terminal Santuário 01',
     defaultPath: '/display',
   },
   {
     id: 'u3',
-    email: 'screen2@grace.tv',
-    password: 'tv2',
+    email: 'tela2@adec.br',
+    password: 'tela',
     role: 'screen',
-    name: 'Lobby Screen',
+    name: 'Terminal Recepção 02',
     defaultPath: '/news',
+  },
+  {
+    id: 'u4',
+    email: 'tela3@adec.br',
+    password: 'tela',
+    role: 'screen',
+    name: 'Terminal Kids 03',
+    defaultPath: '/display',
   }
 ];

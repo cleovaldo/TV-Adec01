@@ -23,6 +23,32 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   }, []);
 
+  // Polling for metrics to keep dashboard updated
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/screens/metrics');
+        if (response.ok) {
+          const metrics = await response.json();
+          setScreens(prev => {
+            const updated = prev.map(s => {
+              if (metrics[s.id]) {
+                return { ...s, ...metrics[s.id] };
+              }
+              return s;
+            });
+            // Also save to localStorage to keep it consistent
+            localStorage.setItem('tv_screens', JSON.stringify(updated));
+            return updated;
+          });
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const activeScreensCount = screens.filter(s => s.status === 'online').length;
 
   return (
@@ -109,10 +135,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
-                    <th className="px-6 py-4">Identidade da Tela</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Métricas</th>
-                    <th className="px-6 py-4">Conteúdo Atual</th>
+                    <th className="px-6 py-4">Informações da Tela</th>
+                    <th className="px-6 py-4">Status & Energia</th>
+                    <th className="px-6 py-4">Métricas (CPU/Temp)</th>
+                    <th className="px-6 py-4">Conteúdo em Exibição</th>
                     <th className="px-6 py-4 text-right">Ações</th>
                   </tr>
                 </thead>
@@ -122,8 +148,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       <tr key={screen.id} className="group hover:bg-[#2a3548]/30 transition-colors">
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-8 rounded bg-[#040e1f] flex items-center justify-center">
-                              <Monitor className={`w-5 h-5 ${screen.status === 'online' ? 'text-[#b7c8e1]' : 'text-slate-600'}`} />
+                            <div className="w-12 h-8 rounded bg-[#040e1f] flex items-center justify-center border border-white/5">
+                              <Monitor className={`w-5 h-5 ${screen.status === 'online' ? 'text-[#b7c8e1]' : 'text-slate-700'}`} />
                             </div>
                             <div>
                               <div className="font-bold text-[#d8e3fb]">{screen.name}</div>
@@ -132,12 +158,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                           </div>
                         </td>
                         <td className="px-6 py-5">
-                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter flex items-center w-fit gap-1 ${
-                            screen.status === 'online' ? 'bg-[#ffb95f]/10 text-[#ffb95f]' : 'bg-slate-800 text-slate-500'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${screen.status === 'online' ? 'bg-[#ffb95f]' : 'bg-slate-600'}`}></span>
-                            {screen.status}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter flex items-center w-fit gap-1 ${
+                              screen.status === 'online' ? 'bg-[#ffb95f]/10 text-[#ffb95f]' : 'bg-slate-800 text-slate-500'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${screen.status === 'online' ? 'bg-[#ffb95f]' : 'bg-slate-600'}`}></span>
+                              {screen.status}
+                            </span>
+                            <span className={`text-[9px] font-bold ${screen.isPowerOn ? 'text-green-500' : 'text-red-500'}`}>
+                              POWER: {screen.isPowerOn ? 'ON' : 'OFF'}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-3">
@@ -160,19 +191,25 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         <td className="px-6 py-5 text-right">
                           <button 
                             onClick={() => onNavigate('screens')}
-                            className="px-3 py-1.5 rounded bg-[#45556b] text-[#b7c8e1] text-xs font-bold hover:bg-[#b7c8e1] hover:text-[#213145] transition-all"
+                            className="px-3 py-1.5 rounded bg-[#2a3548] text-[#b7c8e1] text-xs font-bold hover:bg-[#ffb95f] hover:text-[#472a00] transition-all"
                           >
-                            Visualizar
+                            Gerenciar
                           </button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                        <Monitor className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                        <p className="font-bold uppercase tracking-widest text-xs">Nenhum endpoint registrado</p>
-                        <p className="text-[10px] mt-1">Vá para o gerenciamento de telas para adicionar sua primeira TV.</p>
+                      <td colSpan={5} className="px-6 py-16 text-center text-slate-500">
+                        <Monitor className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p className="font-bold uppercase tracking-widest text-sm">Nenhum endpoint registrado</p>
+                        <p className="text-xs mt-2 max-w-xs mx-auto">Vá para o gerenciamento de telas para adicionar sua primeira TV e começar a transmitir.</p>
+                        <button 
+                          onClick={() => onNavigate('screens')}
+                          className="mt-6 px-6 py-2 bg-[#ffb95f] text-[#472a00] rounded-md text-xs font-bold hover:opacity-90 transition-all"
+                        >
+                          Registrar Primeira Tela
+                        </button>
                       </td>
                     </tr>
                   )}

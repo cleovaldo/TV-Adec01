@@ -1,4 +1,4 @@
-import { Edit3, Palette, Upload, CheckCircle, ArrowRight, Tv, Share2, Calendar, Users, Info, TrendingUp, Plus, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Edit3, Palette, Upload, CheckCircle, ArrowRight, Tv, Share2, Calendar, Users, Info, TrendingUp, Plus, Loader2, Sparkles, Wand2, Newspaper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -17,6 +17,11 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
   const [showAIPanel, setShowAIPanel] = useState(false);
 
   const [activeSubTab, setActiveSubTab] = useState<'announcements' | 'news'>('announcements');
+  const [selectedBg, setSelectedBg] = useState('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800');
+  const [accentColor, setAccentColor] = useState('#ffb95f');
+  const [layout, setLayout] = useState<'classic' | 'modern' | 'minimal'>('classic');
+  const [fontFamily, setFontFamily] = useState<'sans' | 'serif' | 'mono'>('sans');
+  const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
 
   useEffect(() => {
     const savedDraft = localStorage.getItem('announcement_draft');
@@ -56,7 +61,6 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
     try {
       if (activeSubTab === 'announcements') {
         // For announcements, we update the playlist for all screens
-        // In a real app, we might select specific screens, but here we update all defaults
         const response = await fetch('/api/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -68,7 +72,11 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
                 type: 'image',
                 title: title,
                 content: content,
-                url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800',
+                url: selectedBg,
+                accentColor: accentColor,
+                layout: layout,
+                fontFamily: fontFamily,
+                textAlign: textAlign,
                 duration: 15
               }
             ]
@@ -86,7 +94,11 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
                 id: Date.now().toString(),
                 title: title,
                 content: content,
-                date: new Date().toISOString()
+                date: new Date().toISOString(),
+                style: {
+                  accentColor: accentColor,
+                  fontFamily: fontFamily
+                }
               }
             ]
           })
@@ -298,27 +310,106 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
                 <Palette className="w-5 h-5" />
                 <h3 className="font-bold text-lg uppercase tracking-wider">Estilo Visual</h3>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[#b7c8e1] mb-3">Imagem de Fundo</label>
                   <div className="grid grid-cols-4 gap-4">
-                    <button className="relative aspect-video rounded-md overflow-hidden ring-2 ring-[#ffb95f] group">
-                      <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <CheckCircle className="text-[#ffb95f] w-6 h-6" />
-                      </div>
-                    </button>
-                    {[1, 2].map((i) => (
-                      <button key={i} className="relative aspect-video rounded-md overflow-hidden hover:opacity-100 transition-opacity">
-                        <img src={`https://picsum.photos/seed/bg${i}/800/450`} className="w-full h-full object-cover opacity-50" />
+                    {[
+                      'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800',
+                      'https://images.unsplash.com/photo-1517673132405-a56a62b18acc?auto=format&fit=crop&q=80&w=800',
+                      'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800',
+                      'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&q=80&w=800'
+                    ].map((url, i) => (
+                      <button 
+                        key={i}
+                        type="button"
+                        onClick={() => setSelectedBg(url)}
+                        className={`relative aspect-video rounded-md overflow-hidden transition-all ${selectedBg === url ? 'ring-2 ring-[#ffb95f] scale-95' : 'hover:opacity-80'}`}
+                      >
+                        <img src={url} className={`w-full h-full object-cover ${selectedBg === url ? 'opacity-80' : 'opacity-50'}`} referrerPolicy="no-referrer" />
+                        {selectedBg === url && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <CheckCircle className="text-[#ffb95f] w-6 h-6" />
+                          </div>
+                        )}
                       </button>
                     ))}
-                    <button className="aspect-video rounded-md bg-[#2a3548] flex flex-col items-center justify-center gap-1 border border-dashed border-white/10 text-slate-500 hover:text-[#b7c8e1] transition-colors">
+                    <button 
+                      type="button"
+                      className="aspect-video rounded-md bg-[#2a3548] flex flex-col items-center justify-center gap-1 border border-dashed border-white/10 text-slate-500 hover:text-[#b7c8e1] transition-colors"
+                    >
                       <Upload className="w-4 h-4" />
                       <span className="text-[10px] font-bold">PERSONALIZAR</span>
                     </button>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#b7c8e1] mb-3">Cor de Destaque</label>
+                    <div className="flex gap-3">
+                      {['#ffb95f', '#b7c8e1', '#ff6b6b', '#4ecdc4', '#a29bfe', '#55efc4'].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setAccentColor(color)}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${accentColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#b7c8e1] mb-3">Layout do Slide</label>
+                    <div className="flex gap-2">
+                      {(['classic', 'modern', 'minimal'] as const).map((l) => (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => setLayout(l)}
+                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all ${layout === l ? 'bg-[#ffb95f] text-[#472a00]' : 'bg-[#2a3548] text-[#b7c8e1] hover:bg-[#36445d]'}`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#b7c8e1] mb-3">Tipografia</label>
+                    <div className="flex gap-2">
+                      {(['sans', 'serif', 'mono'] as const).map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setFontFamily(f)}
+                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all ${fontFamily === f ? 'bg-[#ffb95f] text-[#472a00]' : 'bg-[#2a3548] text-[#b7c8e1] hover:bg-[#36445d]'}`}
+                          style={{ fontFamily: f === 'sans' ? 'sans-serif' : f === 'serif' ? 'serif' : 'monospace' }}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#b7c8e1] mb-3">Alinhamento</label>
+                    <div className="flex gap-2">
+                      {(['left', 'center', 'right'] as const).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setTextAlign(a)}
+                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-all ${textAlign === a ? 'bg-[#ffb95f] text-[#472a00]' : 'bg-[#2a3548] text-[#b7c8e1] hover:bg-[#36445d]'}`}
+                        >
+                          {a}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="pt-4 flex justify-end gap-4">
                   <button 
                     onClick={handleSaveDraft}
@@ -352,28 +443,60 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
               </div>
 
               <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden shadow-2xl ring-8 ring-[#111c2d]">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800')" }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-                  <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                    <h1 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-lg">{title}</h1>
-                    <p className="text-sm text-slate-200 max-w-sm font-medium leading-relaxed opacity-90">{content}</p>
-                    <div className="mt-6 flex items-center justify-between border-t border-white/20 pt-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-white/10 backdrop-blur flex items-center justify-center">
-                          <Calendar className="w-4 h-4 text-white" />
+                {activeSubTab === 'announcements' ? (
+                  <div className="absolute inset-0 bg-cover bg-center transition-all duration-700" style={{ backgroundImage: `url('${selectedBg}')` }}>
+                    <div className={`absolute inset-0 ${layout === 'minimal' ? 'bg-black/40' : 'bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent'}`}></div>
+                    <div 
+                      className={`absolute inset-0 p-8 flex flex-col ${layout === 'modern' ? 'justify-center items-center text-center' : 'justify-end'}`}
+                      style={{ 
+                        fontFamily: fontFamily === 'sans' ? 'inherit' : fontFamily === 'serif' ? 'serif' : 'monospace',
+                        textAlign: textAlign 
+                      }}
+                    >
+                      <h1 className={`${layout === 'modern' ? 'text-4xl' : 'text-3xl'} font-black text-white leading-tight mb-2 drop-shadow-lg`}>{title}</h1>
+                      <p className={`text-sm text-slate-200 font-medium leading-relaxed opacity-90 ${layout === 'modern' ? 'max-w-md' : 'max-w-sm'}`}>{content}</p>
+                      {layout !== 'minimal' && (
+                        <div className={`mt-6 flex items-center justify-between border-t border-white/20 pt-4 ${layout === 'modern' ? 'w-full' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-white/10 backdrop-blur flex items-center justify-center">
+                              <Calendar className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">Time & Location</p>
+                              <p className="text-[10px] text-white font-semibold">Friday, 7:00 PM • Main Sanctuary</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[8px] text-slate-400 font-bold uppercase">Streaming Live</p>
+                            <p className="text-[10px] font-bold" style={{ color: accentColor }}>gracecommunity.org/live</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[8px] text-slate-400 font-bold uppercase">Time & Location</p>
-                          <p className="text-[10px] text-white font-semibold">Friday, 7:00 PM • Main Sanctuary</p>
-                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-[#040e1f] flex flex-col items-center justify-center p-8">
+                    <div className="w-full max-w-md space-y-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Newspaper className="w-5 h-5 text-[#ffb95f]" />
+                        <h5 className="text-xs font-bold uppercase tracking-widest text-slate-400">Visualização do Feed</h5>
                       </div>
-                      <div className="text-right">
-                        <p className="text-[8px] text-slate-400 font-bold uppercase">Streaming Live</p>
-                        <p className="text-[10px] text-[#ffb95f] font-bold">gracecommunity.org/live</p>
+                      <div className="bg-[#111c2d] p-6 rounded-xl border border-white/5 shadow-xl">
+                        <h4 className="text-lg font-bold text-[#d8e3fb] mb-2" style={{ color: accentColor }}>{title}</h4>
+                        <p className="text-sm text-slate-400 line-clamp-2">{content}</p>
+                      </div>
+                      <div className="relative h-12 bg-[#111c2d] rounded-lg overflow-hidden border border-white/5 flex items-center">
+                        <div className="absolute left-0 top-0 bottom-0 w-24 bg-[#ffb95f] text-[#472a00] flex items-center justify-center text-[10px] font-black uppercase tracking-tighter z-10">
+                          URGENTE
+                        </div>
+                        <div className="flex whitespace-nowrap animate-marquee pl-28">
+                          <span className="text-xs font-bold text-[#d8e3fb] mr-12">{title}: {content}</span>
+                          <span className="text-xs font-bold text-[#d8e3fb] mr-12">{title}: {content}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="mt-8 grid grid-cols-2 gap-4">

@@ -55,7 +55,7 @@ export default function Login({ onLogin }: LoginProps) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@grace.tv"
+                  placeholder="admin@adec.br"
                   className="w-full bg-[#081425] border border-white/5 rounded-xl pl-12 pr-4 py-4 text-[#d8e3fb] outline-none focus:ring-2 focus:ring-[#ffb95f]/50 transition-all"
                 />
               </div>
