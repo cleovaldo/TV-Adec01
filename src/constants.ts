@@ -125,3 +125,29 @@ export const TV_SCREENS: TVScreen[] = [
     isPowerOn: false,
   }
 ];
+
+export const USERS = [
+  {
+    id: 'u1',
+    email: 'admin@grace.tv',
+    password: 'admin',
+    role: 'admin',
+    name: 'Usuário Admin',
+  },
+  {
+    id: 'u2',
+    email: 'screen1@grace.tv',
+    password: 'tv1',
+    role: 'screen',
+    name: 'Sanctuary Screen',
+    defaultPath: '/display',
+  },
+  {
+    id: 'u3',
+    email: 'screen2@grace.tv',
+    password: 'tv2',
+    role: 'screen',
+    name: 'Lobby Screen',
+    defaultPath: '/news',
+  }
+];

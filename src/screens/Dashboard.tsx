@@ -1,12 +1,35 @@
 import { Monitor, Heart, HardDrive, PlusCircle, Upload, Megaphone, TrendingUp, CheckCircle } from 'lucide-react';
 import { TV_SCREENS, MEDIA_ASSETS } from '../constants';
+import { useState, useEffect } from 'react';
+import { TVScreen } from '../types';
 
-export default function Dashboard() {
+interface DashboardProps {
+  onNavigate: (screen: any) => void;
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
+  const [screens, setScreens] = useState<TVScreen[]>([]);
+
+  useEffect(() => {
+    const savedScreens = localStorage.getItem('tv_screens');
+    if (savedScreens) {
+      try {
+        setScreens(JSON.parse(savedScreens));
+      } catch (e) {
+        setScreens([]);
+      }
+    } else {
+      setScreens([]);
+    }
+  }, []);
+
+  const activeScreensCount = screens.filter(s => s.status === 'online').length;
+
   return (
     <div className="p-8 h-full overflow-y-auto custom-scrollbar">
       <section className="mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-[#d8e3fb]">Visão Geral do Sistema</h1>
-        <p className="text-slate-400 max-w-2xl">Gerencie a comunicação visual do seu santuário digital. Monitorando 24 endpoints ativos em 3 unidades.</p>
+        <p className="text-slate-400 max-w-2xl">Gerencie a comunicação visual do seu santuário digital. Monitorando {screens.length} {screens.length === 1 ? 'endpoint ativo' : 'endpoints ativos'}.</p>
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
@@ -16,13 +39,14 @@ export default function Dashboard() {
             <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Telas Ativas</span>
           </div>
           <div>
-            <div className="text-4xl font-black text-[#d8e3fb]">18<span className="text-lg text-slate-400 font-medium">/24</span></div>
+            <div className="text-4xl font-black text-[#d8e3fb]">{activeScreensCount}<span className="text-lg text-slate-400 font-medium">/{screens.length}</span></div>
             <div className="flex items-center gap-1 text-xs text-[#ffb95f] mt-1">
               <TrendingUp className="w-4 h-4" />
-              <span>+2 desde o serviço de domingo</span>
+              <span>{screens.length === 0 ? 'Nenhuma tela cadastrada' : `Status: ${activeScreensCount > 0 ? 'Operacional' : 'Aguardando conexão'}`}</span>
             </div>
           </div>
         </div>
+        {/* ... rest of the cards ... */}
 
         <div className="p-6 rounded-xl bg-[#111c2d] flex flex-col justify-between min-h-[160px]">
           <div className="flex justify-between items-start">
@@ -56,7 +80,10 @@ export default function Dashboard() {
 
         <div className="p-6 rounded-xl bg-[#2a3548] border border-white/10 flex flex-col gap-3">
           <h3 className="text-sm font-bold text-[#ffb95f] uppercase tracking-widest mb-1">Ações Rápidas</h3>
-          <button className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-[#152031] hover:bg-[#2f3a4c] transition-colors text-sm font-medium text-[#d8e3fb] group">
+          <button 
+            onClick={() => onNavigate('screens')}
+            className="flex items-center gap-3 w-full p-2.5 rounded-lg bg-[#152031] hover:bg-[#2f3a4c] transition-colors text-sm font-medium text-[#d8e3fb] group"
+          >
             <PlusCircle className="text-[#b7c8e1] w-4 h-4 group-hover:scale-110 transition-transform" />
             Registrar Nova Tela
           </button>
@@ -77,43 +104,81 @@ export default function Dashboard() {
             <span className="w-1.5 h-6 bg-[#ffb95f] rounded-full"></span>
             Registro de Telas Ativas
           </h2>
-          <div className="bg-[#111c2d] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-white/5">
-              <div className="col-span-5">Identidade da Tela</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-3">Conteúdo Atual</div>
-              <div className="col-span-2 text-right">Ações</div>
+          <div className="bg-[#111c2d] rounded-xl border border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
+                    <th className="px-6 py-4">Identidade da Tela</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Métricas</th>
+                    <th className="px-6 py-4">Conteúdo Atual</th>
+                    <th className="px-6 py-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {screens.length > 0 ? (
+                    screens.map((screen) => (
+                      <tr key={screen.id} className="group hover:bg-[#2a3548]/30 transition-colors">
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-8 rounded bg-[#040e1f] flex items-center justify-center">
+                              <Monitor className={`w-5 h-5 ${screen.status === 'online' ? 'text-[#b7c8e1]' : 'text-slate-600'}`} />
+                            </div>
+                            <div>
+                              <div className="font-bold text-[#d8e3fb]">{screen.name}</div>
+                              <div className="text-[10px] text-slate-500">IP: {screen.ip} • {screen.model}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter flex items-center w-fit gap-1 ${
+                            screen.status === 'online' ? 'bg-[#ffb95f]/10 text-[#ffb95f]' : 'bg-slate-800 text-slate-500'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${screen.status === 'online' ? 'bg-[#ffb95f]' : 'bg-slate-600'}`}></span>
+                            {screen.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-bold text-slate-500 uppercase">CPU</span>
+                              <span className="text-xs font-bold text-slate-300">{screen.cpuUsage}%</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-bold text-slate-500 uppercase">TEMP</span>
+                              <span className={`text-xs font-bold ${screen.temperature > 65 ? 'text-orange-400' : 'text-slate-300'}`}>
+                                {screen.temperature}°C
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="text-sm font-medium text-[#d8e3fb] truncate max-w-[150px]">{screen.currentContent}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase">{screen.lastSeen}</div>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <button 
+                            onClick={() => onNavigate('screens')}
+                            className="px-3 py-1.5 rounded bg-[#45556b] text-[#b7c8e1] text-xs font-bold hover:bg-[#b7c8e1] hover:text-[#213145] transition-all"
+                          >
+                            Visualizar
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                        <Monitor className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="font-bold uppercase tracking-widest text-xs">Nenhum endpoint registrado</p>
+                        <p className="text-[10px] mt-1">Vá para o gerenciamento de telas para adicionar sua primeira TV.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-            {TV_SCREENS.map((screen) => (
-              <div key={screen.id} className="grid grid-cols-12 px-6 py-5 items-center hover:bg-[#2a3548] transition-colors border-b border-white/5 last:border-none">
-                <div className="col-span-5 flex items-center gap-4">
-                  <div className="w-12 h-8 rounded bg-[#040e1f] flex items-center justify-center">
-                    <Monitor className={`w-5 h-5 ${screen.status === 'online' ? 'text-[#b7c8e1]' : 'text-slate-600'}`} />
-                  </div>
-                  <div>
-                    <div className="font-bold text-[#d8e3fb]">{screen.name}</div>
-                    <div className="text-xs text-slate-500">IP: {screen.ip} • {screen.model}</div>
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter flex items-center w-fit gap-1 ${
-                    screen.status === 'online' ? 'bg-[#ffb95f]/10 text-[#ffb95f]' : 'bg-slate-800 text-slate-500'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${screen.status === 'online' ? 'bg-[#ffb95f]' : 'bg-slate-600'}`}></span>
-                    {screen.status}
-                  </span>
-                </div>
-                <div className="col-span-3">
-                  <div className="text-sm font-medium">{screen.currentContent}</div>
-                  <div className="text-[10px] text-slate-500">{screen.lastSeen}</div>
-                </div>
-                <div className="col-span-2 text-right">
-                  <button className="px-3 py-1.5 rounded bg-[#45556b] text-[#b7c8e1] text-xs font-bold hover:bg-[#b7c8e1] hover:text-[#213145] transition-all">
-                    Visualizar
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { Search, Bell, User } from 'lucide-react';
 
-export default function TopBar() {
+export default function TopBar({ user }: { user?: any }) {
   return (
     <header className="fixed top-0 right-0 left-64 h-16 px-8 flex items-center justify-between z-30 bg-[#081425]/70 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] font-['Plus_Jakarta_Sans'] text-sm tracking-tight text-[#b7c8e1]">
       <div className="flex items-center gap-8">
@@ -28,7 +28,7 @@ export default function TopBar() {
           </button>
           <div className="flex items-center gap-3 pl-4 border-l border-slate-800">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-[#d8e3fb]">Usuário Admin</p>
+              <p className="text-xs font-bold text-[#d8e3fb]">{user?.name || 'Usuário Admin'}</p>
               <p className="text-[10px] text-slate-500">Status Global: Online</p>
             </div>
             <div className="w-8 h-8 rounded-full border border-[#b7c8e1]/20 overflow-hidden bg-[#2a3548] flex items-center justify-center">

@@ -24,18 +24,16 @@ export default function ScreensManagement() {
       try {
         setScreens(JSON.parse(savedScreens));
       } catch (e) {
-        setScreens(TV_SCREENS);
+        setScreens([]);
       }
     } else {
-      setScreens(TV_SCREENS);
+      setScreens([]);
     }
   }, []);
 
   // Save screens to localStorage whenever they change
   useEffect(() => {
-    if (screens.length > 0) {
-      localStorage.setItem('tv_screens', JSON.stringify(screens));
-    }
+    localStorage.setItem('tv_screens', JSON.stringify(screens));
   }, [screens]);
 
   const handleRefresh = () => {
