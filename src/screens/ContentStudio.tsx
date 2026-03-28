@@ -1,6 +1,7 @@
-import { Edit3, Palette, Upload, CheckCircle, ArrowRight, Tv, Share2, Calendar, Users, Info, TrendingUp, Plus, Loader2 } from 'lucide-react';
+import { Edit3, Palette, Upload, CheckCircle, ArrowRight, Tv, Share2, Calendar, Users, Info, TrendingUp, Plus, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface ContentStudioProps {
   onPreview: () => void;
@@ -11,6 +12,9 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
   const [content, setContent] = useState('Join us this Friday at 7 PM for an evening of prayer, music, and community fellowship in the main sanctuary.');
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const [activeSubTab, setActiveSubTab] = useState<'announcements' | 'news'>('announcements');
 
@@ -67,6 +71,61 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
     });
   };
 
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Por favor, descreva o que você deseja gerar.');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      
+      const systemInstruction = activeSubTab === 'announcements' 
+        ? "Você é um redator criativo para uma rede de TVs de avisos comunitários (ADEC). Crie um anúncio impactante e conciso."
+        : "Você é um jornalista para um feed de notícias de rodapé (scrolling news). Crie uma notícia curta e objetiva.";
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Gere um ${activeSubTab === 'announcements' ? 'anúncio' : 'item de notícia'} baseado no seguinte tema: ${aiPrompt}`,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: {
+                type: Type.STRING,
+                description: "Um título curto e chamativo (máx 40 caracteres)"
+              },
+              content: {
+                type: Type.STRING,
+                description: activeSubTab === 'announcements' 
+                  ? "O corpo do anúncio (máx 150 caracteres)" 
+                  : "A notícia para o feed (máx 100 caracteres)"
+              }
+            },
+            required: ["title", "content"]
+          }
+        }
+      });
+
+      const result = JSON.parse(response.text);
+      setTitle(result.title);
+      setContent(result.content);
+      setShowAIPanel(false);
+      setAiPrompt('');
+      toast.success('Conteúdo gerado com sucesso!', {
+        icon: <Sparkles className="w-4 h-4 text-yellow-500" />
+      });
+    } catch (error) {
+      console.error('AI Generation Error:', error);
+      toast.error('Erro ao gerar conteúdo com IA. Verifique sua conexão e chave de API.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   return (
     <div className="p-8 h-full overflow-y-auto custom-scrollbar">
       <div className="max-w-7xl mx-auto">
@@ -98,12 +157,50 @@ export default function ContentStudio({ onPreview }: ContentStudioProps) {
         <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-7 space-y-8">
             <section className="bg-[#111c2d] rounded-xl p-8 shadow-sm">
-              <div className="flex items-center gap-2 mb-6 text-[#ffb95f]">
-                <Edit3 className="w-5 h-5" />
-                <h3 className="font-bold text-lg uppercase tracking-wider">
-                  {activeSubTab === 'announcements' ? 'Detalhes do Slide' : 'Configuração do Feed'}
-                </h3>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-[#ffb95f]">
+                  <Edit3 className="w-5 h-5" />
+                  <h3 className="font-bold text-lg uppercase tracking-wider">
+                    {activeSubTab === 'announcements' ? 'Detalhes do Slide' : 'Configuração do Feed'}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setShowAIPanel(!showAIPanel)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${showAIPanel ? 'bg-[#ffb95f] text-[#472a00]' : 'bg-[#2a3548] text-[#ffb95f] hover:bg-[#36445d]'}`}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Assistente de IA
+                </button>
               </div>
+
+              {showAIPanel && (
+                <div className="mb-8 p-6 bg-[#081425] rounded-xl border border-[#ffb95f]/20 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Wand2 className="w-4 h-4 text-[#ffb95f]" />
+                    <h4 className="text-xs font-bold text-[#d8e3fb] uppercase tracking-wider">O que você deseja anunciar?</h4>
+                  </div>
+                  <div className="flex gap-3">
+                    <input 
+                      type="text"
+                      placeholder="Ex: Noite de pizza para jovens no sábado às 19h..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleGenerateAI()}
+                      className="flex-1 bg-[#111c2d] border border-white/5 rounded-lg px-4 py-2 text-sm text-[#d8e3fb] outline-none focus:ring-1 focus:ring-[#ffb95f]"
+                    />
+                    <button 
+                      onClick={handleGenerateAI}
+                      disabled={isGeneratingAI}
+                      className="px-6 py-2 bg-[#ffb95f] text-[#472a00] rounded-lg font-bold text-xs hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isGeneratingAI ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      Gerar
+                    </button>
+                  </div>
+                  <p className="mt-3 text-[10px] text-slate-500 italic">A IA criará um título e conteúdo otimizados para as telas.</p>
+                </div>
+              )}
+
               <form className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="col-span-2">

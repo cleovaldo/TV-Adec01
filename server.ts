@@ -16,6 +16,10 @@ async function startServer() {
   let screenPlaylists: Record<string, any> = {};
 
   // API Routes
+  app.get("/health", (req, res) => {
+    res.json({ status: "ok", mode: process.env.NODE_ENV });
+  });
+
   app.get("/api/screens/:id/content", (req, res) => {
     const { id } = req.params;
     res.json(screenPlaylists[id] || { playlist: [], timestamp: Date.now() });
@@ -71,7 +75,10 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  const isProduction = process.env.NODE_ENV === "production";
+  console.log(`Starting server in ${isProduction ? 'production' : 'development'} mode...`);
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -79,9 +86,21 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    console.log(`Serving static files from: ${distPath}`);
+    
+    // Serve static files
     app.use(express.static(distPath));
+    
+    // Fallback for SPA
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      console.log(`Fallback: serving ${indexPath}`);
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error(`Error sending index.html: ${err}`);
+          res.status(404).send("Page not found - index.html missing");
+        }
+      });
     });
   }
 

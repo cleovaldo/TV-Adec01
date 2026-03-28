@@ -1,4 +1,4 @@
-import { LayoutDashboard, Monitor, PlayCircle, Library, Settings, Radio, HelpCircle, Church } from 'lucide-react';
+import { LayoutDashboard, Monitor, PlayCircle, Library, Settings, Radio, HelpCircle, Church, Megaphone, Newspaper, Home, Grid } from 'lucide-react';
 import { ScreenType } from '../types';
 import { toast } from 'sonner';
 
@@ -10,11 +10,12 @@ interface SidebarProps {
 
 export default function Sidebar({ activeScreen, onScreenChange, onEnterPublicMode }: SidebarProps) {
   const menuItems = [
-    { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Bem-vindo', icon: Home },
+    { id: 'library', label: 'Galeria', icon: Grid },
+    { id: 'studio', label: 'Comunicados', icon: Megaphone },
+    { id: 'news', label: 'News', icon: Newspaper },
     { id: 'screens', label: 'Telas', icon: Monitor },
-    { id: 'playlists', label: 'Listas de Reprodução', icon: PlayCircle },
-    { id: 'library', label: 'Biblioteca de Mídia', icon: Library },
-    { id: 'studio', label: 'Estúdio de Conteúdo', icon: Radio },
+    { id: 'playlists', label: 'Playlists', icon: PlayCircle },
     { id: 'settings', label: 'Configurações', icon: Settings },
   ];
 
@@ -64,11 +65,22 @@ export default function Sidebar({ activeScreen, onScreenChange, onEnterPublicMod
 
       <div className="p-4 mt-auto space-y-2">
         <button 
-          onClick={onEnterPublicMode}
+          onClick={() => {
+            window.location.href = '/news';
+          }}
           className="w-full py-3 rounded-md border border-[#ffb95f]/30 text-[#ffb95f] font-bold flex items-center justify-center gap-2 hover:bg-[#ffb95f]/10 transition-all active:scale-95"
         >
+          <Newspaper className="w-4 h-4" />
+          Modo Mundo Cristão
+        </button>
+        <button 
+          onClick={() => {
+            window.location.href = '/display';
+          }}
+          className="w-full py-3 rounded-md bg-[#2a3548] text-white font-bold flex items-center justify-center gap-2 hover:bg-[#36445d] transition-all active:scale-95"
+        >
           <Monitor className="w-4 h-4" />
-          Modo de Exibição
+          Modo Playlist
         </button>
         <button 
           onClick={handleGoLive}

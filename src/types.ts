@@ -1,4 +1,4 @@
-export type ScreenType = 'dashboard' | 'screens' | 'playlists' | 'library' | 'settings' | 'studio';
+export type ScreenType = 'dashboard' | 'screens' | 'playlists' | 'library' | 'settings' | 'studio' | 'news';
 
 export interface MediaAsset {
   id: string;

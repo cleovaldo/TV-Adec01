@@ -8,13 +8,31 @@ import MediaLibrary from './screens/MediaLibrary';
 import ContentStudio from './screens/ContentStudio';
 import ScreensManagement from './screens/ScreensManagement';
 import PublicDisplay from './screens/PublicDisplay';
+import DisplayMode from './screens/DisplayMode';
+import Settings from './screens/Settings';
+import News from './screens/News';
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenType>('dashboard');
-  const [isPublicMode, setIsPublicMode] = useState(false);
+  const [isPublicMode, setIsPublicMode] = useState(() => {
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const url = window.location.href.toLowerCase();
+    
+    console.log('App initialization - Path:', path, 'Search:', search, 'URL:', url);
+    
+    const isDisplay = path.includes('/display') || search.includes('mode=display');
+    const isNews = path.includes('/news') || search.includes('mode=news');
+    
+    return isDisplay || isNews;
+  });
 
   if (isPublicMode) {
-    return <PublicDisplay onExit={() => setIsPublicMode(false)} />;
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const isNewsMode = path.includes('/news') || search.includes('mode=news');
+    
+    return <DisplayMode isNews={isNewsMode} onExit={() => setIsPublicMode(false)} />;
   }
 
   const renderScreen = () => {
@@ -28,6 +46,10 @@ export default function App() {
         return <ContentStudio onPreview={() => setIsPublicMode(true)} />;
       case 'screens':
         return <ScreensManagement />;
+      case 'settings':
+        return <Settings />;
+      case 'news':
+        return <News />;
       default:
         return <Dashboard />;
     }
